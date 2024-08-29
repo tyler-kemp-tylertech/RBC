@@ -139,7 +139,7 @@ namespace ReleaseBranchCreator
                     }
 
                     // Create release branch
-                    string releaseBranch = $"TESTING/{releaseDate}";
+                    string releaseBranch = $"release/{releaseDate}";
                     try
                     {
                         // check if the release branch already exists

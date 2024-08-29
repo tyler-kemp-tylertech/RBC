@@ -1,6 +1,102 @@
 [
     {
+        "repository": "tyler-payments",
+        "defaultbranch": "master"
+    },
+    {
+        "repository": "payments-batch-service",
+        "defaultbranch": "main"
+    },
+    {
+        "repository": "payments-reconciliation-service",
+        "defaultbranch": "main"
+    },
+    {
+        "repository": "payments-checkout",
+        "defaultbranch": "master"
+    },
+    {
+        "repository": "payments-checkout-admin",
+        "defaultbranch": "master"
+    },
+    {
+        "repository": "payments-checkout-api",
+        "defaultbranch": "master"
+    },
+    {
+        "repository": "payments-reconciliation-service",
+        "defaultbranch": "main"
+    },
+    {
+        "repository": "payments-ivr-api",
+        "defaultbranch": "master"
+    },
+    {
+        "repository": "payments-pig-service",
+        "defaultbranch": "master"
+    },
+    {
+        "repository": "payments-pig-admin",
+        "defaultbranch": "master"
+    },
+    {
+        "repository": "payments-permissions",
+        "defaultbranch": "master"
+    },
+    {
+        "repository": "payments-operations",
+        "defaultbranch": "master"
+    },
+    {
+        "repository": "payments-miscellaneous-payments-external",
+        "defaultbranch": "main"
+    },
+    {
+        "repository": "payments-batchintegration-admin",
+        "defaultbranch": "main"
+    },
+    {
+        "repository": "payments-enterprisepayments-api",
+        "defaultbranch": "main"
+    },
+    {
+        "repository": "payments-pig-operational",
+        "defaultbranch": "master"
+    },
+    {
+        "repository": "payments-reporting-api",
+        "defaultbranch": "master"
+    },
+    {
+        "repository": "payments-ep-open-ar",
+        "defaultbranch": "main"
+    },
+    {
+        "repository": "payments-epopenar-api",
+        "defaultbranch": "main"
+    },
+    {
+        "repository": "payments-navigation-admin",
+        "defaultbranch": "main"
+    },
+    {
         "repository": "payments-billsearch",
+        "defaultbranch": "main"
+    },
+    {
+        "repository": "payments-billsearch-admin",
+        "defaultbranch": "main"
+    },
+    {
+        "repository": "payments-billsearch-api",
+        "defaultbranch": "main"
+    },
+    {
+        "repository": "payments-dashboard",
+        "defaultbranch": "main"
+    },
+    {
+        "repository": "payments-dashboard-api",
         "defaultbranch": "main"
     }
 ]
