@@ -8,3 +8,11 @@ x86/
 bld/
 [Bb]in/
 [Oo]bj/
+[Oo]utput/
+[Rr]untimes/
+
+*.dll
+*.exe
+*.pdb
+*.runtimeconfig.json
+*deps.json
