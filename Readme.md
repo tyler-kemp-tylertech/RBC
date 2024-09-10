@@ -25,20 +25,9 @@ This process includes
     ```sh
     cd rbc
     ```
-3. Restore dependencies:
-    ```sh
-    dotnet restore
-    ```
-
-## Usage
-
-1. Build the project:
+3. Build:
     ```sh
     dotnet build
-    ```
-2. Run the application:
-    ```sh
-    dotnet run
     ```
 
 ## Notes
