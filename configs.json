@@ -1,5 +1,9 @@
 [
     {
+        "repository": "payments-dev-compose",
+        "defaultbranch": "master"
+    },
+    {
         "repository": "tyler-payments",
         "defaultbranch": "master"
     },

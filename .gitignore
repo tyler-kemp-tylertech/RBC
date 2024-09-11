@@ -16,3 +16,4 @@ bld/
 *.pdb
 *.runtimeconfig.json
 *deps.json
+build/configs.json

@@ -1,7 +1,7 @@
 # A powershell script to publish the project with release configuration and move the files to the specified directory
 $project = "ReleaseBranchCreator.csproj"
 $configuration = "Release"
-$outputDirectory = ".\"
+$outputDirectory = ".\build"
 
 # publish the project
 dotnet publish $project -c $configuration
@@ -13,3 +13,4 @@ if (-not (Test-Path $outputDirectory)) {
 
 # move the files to the output directory
 Copy-Item -Path ".\bin\$configuration\net8.0\publish\*" -Destination $outputDirectory -Recurse -Force
+Copy-Item -Path ".\configs.json" -Destination $outputDirectory -Force
