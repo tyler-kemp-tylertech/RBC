@@ -1,0 +1,25 @@
+name: Cut Release Branch
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch_name:
+        description: 'Name of the new branch'
+        required: true
+        default: 'release\XX.XX.XXXX'
+
+jobs:
+  create-branch:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Cut release branch
+      run: |
+        git checkout -b ${{ github.event.inputs.branch_name }}
+        git push origin ${{ github.event.inputs.branch_name }}
+
+    - name: Confirm branch creation
+      run: echo "Branch ${{ github.event.inputs.branch_name }} created successfully."
