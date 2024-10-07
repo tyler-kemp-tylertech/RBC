@@ -1,6 +1,5 @@
-﻿using System.Diagnostics;
-using LibGit2Sharp;
-using LibGit2Sharp.Handlers;
+﻿using System.Text;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace ReleaseBranchCreator
@@ -9,29 +8,48 @@ namespace ReleaseBranchCreator
     {
         static void Main(string[] args)
         {
+            Task.Run(CreateReleaseBranches).GetAwaiter().GetResult();
+        }
+
+        private static async Task CreateReleaseBranches()
+        {
             try
             {
                 Console.WriteLine("This tool will create release branches for Tyler Payments and Enterprise Payments repos and trigger app deployments.");
                 Console.WriteLine("For additional deployment information refer to https://confl.tylertech.com/display/TES/Release+and+Hotfix+branch+creation+and+deployment");
 
                 string currentPath = Directory.GetCurrentDirectory();
-                string configsPath = Path.Combine(currentPath, "configs.json");
+                string repoConfig = Path.Combine(currentPath, "repos.json");
 
-                if (!File.Exists(configsPath))
+                if (!File.Exists(repoConfig))
                 {
-                    Console.WriteLine("ERROR: configs.json not found!");
+                    Console.WriteLine("ERROR: repos.json not found!");
                     return;
                 }
 
-                var configs = JArray.Parse(File.ReadAllText(configsPath));
+                var config = JObject.Parse(File.ReadAllText(repoConfig));
+                string ownerName = config["ownerName"]?.ToString() ?? string.Empty;
+                var repositories = config["repositories"]?.ToObject<JArray>();
+
+                if (string.IsNullOrEmpty(ownerName))
+                {
+                    Console.WriteLine("ERROR: Missing Owner Name in configuration.");
+                    return;
+                }
+
+                if (repositories == null || repositories.Count == 0)
+                {
+                    Console.WriteLine("ERROR: No repositories found in configuration.");
+                    return;
+                }
 
                 // Get release date
-                Console.Write("Enter the date of push to prod (Ex: 04.07.2022): ");
+                Console.Write("Enter the push to prod date (Ex. 01.15.2024): ");
                 string? releaseDate = Console.ReadLine();
 
                 if (string.IsNullOrEmpty(releaseDate))
                 {
-                    Console.WriteLine("ERROR: Release date is required!");
+                    Console.WriteLine("ERROR: Release date is required.");
                     return;
                 }
 
@@ -41,8 +59,6 @@ namespace ReleaseBranchCreator
                     return;
                 }
 
-                // Move up 2 directories where the repos should be located
-                Directory.SetCurrentDirectory(Path.Combine(currentPath, "..", ".."));
                 string? accessToken = Environment.GetEnvironmentVariable("GITHUB_TOKEN");
                 if (string.IsNullOrEmpty(accessToken))
                 {
@@ -50,9 +66,12 @@ namespace ReleaseBranchCreator
                     return;
                 }
 
-                foreach (var config in configs)
+                foreach (var repo in repositories)
                 {
-                    CreateRelease(config, releaseDate, accessToken);
+                    string repoName = repo["repository"]?.ToString() ?? string.Empty;
+
+                    Console.WriteLine($"Triggering cut release branch workflow for {repoName}...");
+                    await TriggerCutReleaseBranchWorkflow(ownerName, repoName, releaseDate, accessToken);
                 }
             }
             catch (Exception ex)
@@ -61,155 +80,79 @@ namespace ReleaseBranchCreator
             }
         }
 
-        static void CreateRelease(JToken config, string releaseDate, string accessToken)
+        private static async Task TriggerCutReleaseBranchWorkflow(string ownerName, string repoName, string releaseDate, string accessToken)
         {
-            string? repositoryPath = config["repository"]?.ToString();
-            string? defaultBranch = config["defaultbranch"]?.ToString();
+            string defaultBranch = await GetDefaultBranch(ownerName, repoName, accessToken);
+            string url = $"https://api.github.com/repos/{ownerName}/{repoName}/actions/workflows/cut-release-branch.yml/dispatches";
 
-            if (string.IsNullOrEmpty(repositoryPath))
+            using (var client = new HttpClient())
             {
-                Console.WriteLine("ERROR: could not read repository from config!");
-                return;
-            }
+                client.DefaultRequestHeaders.UserAgent.Add(new System.Net.Http.Headers.ProductInfoHeaderValue("ReleaseBranchCreator", "1.0"));
+                client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("token", accessToken);
 
-            if (string.IsNullOrEmpty(defaultBranch))
-            {
-                Console.WriteLine("ERROR: could not read default branch from config!");
-                return;
-            }
-
-            Console.WriteLine($"Cutting release for {repositoryPath}...");
-            if (Directory.Exists(repositoryPath))
-            {
-                using (var repo = new Repository(repositoryPath))
+                var payload = new
                 {
-                    // Stash changes
-                    try
+                    @ref = defaultBranch,
+                    inputs = new
                     {
-                        Commands.Stage(repo, "*");
-                        repo.Stashes.Add(repo.Config.BuildSignature(DateTimeOffset.Now), "Stashing changes");
-                        Console.WriteLine("Changes stashed successfully.");
+                        branch_name = "release/" + releaseDate
                     }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine($"Error stashing changes: {ex.Message}");
-                        return;
-                    }
+                };
 
-                    // Checkout the default branch
-                    try
-                    {
-                        Commands.Checkout(repo, defaultBranch);
-                        Console.WriteLine($"Checked out to {defaultBranch} branch.");
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine($"Error checking out to {defaultBranch} branch: {ex.Message}");
-                        return;
-                    }
+                var jsonPayload = JsonConvert.SerializeObject(payload);
+                var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
 
-                    // Pull latest changes
-                    try
-                    {
-                        var signature = repo.Config.BuildSignature(DateTimeOffset.Now);
-                        var credentialsProvider = new CredentialsHandler(
-                            (url, usernameFromUrl, types) =>
-                                new UsernamePasswordCredentials
-                                {
-                                    Username = accessToken,
-                                    Password = string.Empty
-                                }
-                        );
+                try
+                {
+                    var response = await client.PostAsync(url, content);
+                    var responseContent = await response.Content.ReadAsStringAsync();
 
-                        var pullOptions = new PullOptions
-                        {
-                            FetchOptions = new FetchOptions
-                            {
-                                CredentialsProvider = credentialsProvider
-                            }
-                        };
-
-                        Commands.Pull(repo, signature, pullOptions);
-                        Console.WriteLine("Pulled latest changes successfully.");
-                    }
-                    catch (Exception ex)
+                    if (response.IsSuccessStatusCode)
                     {
-                        Console.WriteLine($"Error pulling latest changes: {ex.Message}");
-                        return;
+                        Console.WriteLine("Workflow triggered successfully.");
                     }
-
-                    // Create release branch
-                    string releaseBranch = $"release/{releaseDate}";
-                    try
+                    else
                     {
-                        // check if the release branch already exists
-                        if (repo.Branches[releaseBranch] != null)
-                        {
-                            Console.WriteLine($"Release branch {releaseBranch} already exists for {repositoryPath}...");
-                        }
-                        else
-                        {
-                            repo.CreateBranch(releaseBranch);
-                            Console.WriteLine($"Created release branch: {releaseBranch}");
-                        }
+                        Console.WriteLine($"Failed to trigger workflow: {response.StatusCode} - {response.ReasonPhrase}");
+                        Console.WriteLine($"Response content: {responseContent}");
                     }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine($"Error creating release branch {releaseBranch}: {ex.Message}");
-                        return;
-                    }
-
-                    // Checkout the release branch
-                    try
-                    {
-                        Commands.Checkout(repo, releaseBranch);
-                        Console.WriteLine($"Checked out to release branch: {releaseBranch}");
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine($"Error checking out to release branch {releaseBranch}: {ex.Message}");
-                        return;
-                    }
-
-                    // Push release branch to remote
-                    try
-                    {
-                        var remote = repo.Network.Remotes["origin"];
-                        var pushOptions = new PushOptions
-                        {
-                            CredentialsProvider = new CredentialsHandler(
-                                (url, usernameFromUrl, types) =>
-                                    new UsernamePasswordCredentials
-                                    {
-                                        Username = accessToken,
-                                        Password = string.Empty
-                                    }
-                            )
-                        };
-
-                        repo.Network.Push(remote, $"refs/heads/{releaseBranch}", pushOptions);
-                        Console.WriteLine($"Pushed release branch {releaseBranch} to remote.");
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine($"Error pushing release branch {releaseBranch} to remote: {ex.Message}");
-                        return;
-                    }
-
-                    // Open browser to verify branches
-                    string url = $"https://github.com/tyler-technologies/{repositoryPath}/compare/{defaultBranch}...{releaseBranch}?expand=1";
-                    Process.Start(new ProcessStartInfo
-                    {
-                        FileName = url,
-                        UseShellExecute = true
-                    });
-
-                    Console.WriteLine($"Successfully created release branch for {repositoryPath}...");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"ERROR: {ex.Message}");
                 }
             }
-            else
+        }
+
+        private static async Task<string> GetDefaultBranch(string ownerName, string repoName, string accessToken)
+        {
+            string url = $"https://api.github.com/repos/{ownerName}/{repoName}";
+
+            using (var client = new HttpClient())
             {
-                Console.WriteLine($"ERROR: {repositoryPath} not found!!");
+                client.DefaultRequestHeaders.UserAgent.Add(new System.Net.Http.Headers.ProductInfoHeaderValue("ReleaseBranchCreator", "1.0"));
+                client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("token", accessToken);
+
+                try
+                {
+                    var response = await client.GetAsync(url);
+                    if (response.IsSuccessStatusCode)
+                    {
+                        var jsonResponse = await response.Content.ReadAsStringAsync();
+                        var repoDetails = JsonConvert.DeserializeObject<JObject>(jsonResponse);
+                        return repoDetails?["default_branch"]?.ToString() ?? string.Empty;
+                    }
+                    else
+                    {
+                        Console.WriteLine($"Failed to get repository details: {response.StatusCode} - {response.ReasonPhrase}");
+                        return string.Empty;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"ERROR: {ex.Message}");
+                    return string.Empty;
+                }
             }
         }
     }
