@@ -1,13 +1,11 @@
 # Release Branch Creator
 
-This tool will go through all of the TP/PEP repos listed in the config.json file
+This tool will go through all of the repos listed in the repos.json file
 and cut a release branch for them.
 This process includes 
-    - Stashing local changes
-    - Checking out the main/master branch
-    - Pulling the latest changes
-    - Creating the release branch with the given release date
-    - Pushing the branch up to GitHub
+    - Asking for the date of push to prod.
+    - Making http calls to Github to find the name of the default branch of the repo
+    - Creating a new branch based off the default branch with the name "release\MM.DD.YYYY"
     - A workflow should start for each repo automatically to push those branches to our QA environment
 
 ## Prerequisites
@@ -16,11 +14,10 @@ This process includes
 - A Github Personal access token with repo permissions stored in an environment variable called `GITHUB_TOKEN`
 
 ## Usage 
-1. Run the ReleaseBranchCreator.exe from the shortcut in the release-scripts directory and follow the instructions 
+1. Run the ReleaseBranchCreator.exe and follow the instructions 
 
 ## Notes
 
-1. This app uses the configs.json file to locate all of the repos to cut branches for. 
-2. The configs.json file is copied into the build directory when running the build.ps1 script
-3. If you need to manually create a release branch for a repo, edit the configs.json file in the build directory and then run the app
-
+1. This app makes calls to all of the repos in the repos.json file to create a new release branch that is used for our push to prod process.
+2. The repos.json file is copied into the build directory when running the build.ps1 script. The exe depends on it being in the same directory. 
+3. If you need to manually create a release branch for a repo, edit the repos.json file in the build directory (or whereever the .exe is located) to not include that repo and then run the app
