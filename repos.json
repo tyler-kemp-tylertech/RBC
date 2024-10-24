@@ -1,8 +1,80 @@
 {
-    "ownerName": "tyler-kemp-tylertech",
+    "ownerName": "tyler-technologies",
     "repositories": [
         {
-            "repository": "RBC"
+            "repository": "payments-dev-compose"
+        },
+        {
+            "repository": "tyler-payments"
+        },
+        {
+            "repository": "payments-batch-service"
+        },
+        {
+            "repository": "payments-checkout"
+        },
+        {
+            "repository": "payments-checkout-admin"
+        },
+        {
+            "repository": "payments-checkout-api"
+        },
+        {
+            "repository": "payments-reconciliation-service"
+        },
+        {
+            "repository": "payments-ivr-api"
+        },
+        {
+            "repository": "payments-pig-service"
+        },
+        {
+            "repository": "payments-pig-admin"
+        },
+        {
+            "repository": "payments-permissions"
+        },
+        {
+            "repository": "payments-operations"
+        },
+        {
+            "repository": "payments-miscellaneous-payments-external"
+        },
+        {
+            "repository": "payments-batchintegration-admin"
+        },
+        {
+            "repository": "payments-enterprisepayments-api"
+        },
+        {
+            "repository": "payments-pig-operational"
+        },
+        {
+            "repository": "payments-reporting-api"
+        },
+        {
+            "repository": "payments-ep-open-ar"
+        },
+        {
+            "repository": "payments-epopenar-api"
+        },
+        {
+            "repository": "payments-navigation-admin"
+        },
+        {
+            "repository": "payments-billsearch"
+        },
+        {
+            "repository": "payments-billsearch-admin"
+        },
+        {
+            "repository": "payments-billsearch-api"
+        },
+        {
+            "repository": "payments-dashboard"
+        },
+        {
+            "repository": "payments-dashboard-api"
         }
     ]
 }

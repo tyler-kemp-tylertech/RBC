@@ -13,24 +13,14 @@ This process includes
 ## Prerequisites
 
 - .NET 8 SDK
-- A Github Personal access token with repo permissions stored in an environment variable called "GITHUB_TOKEN"
+- A Github Personal access token with repo permissions stored in an environment variable called `GITHUB_TOKEN`
 
-## Installation
-
-1. Clone the repository:
-    ```sh
-    git clone https://github.com/tyler-kemp-tylertech/RBC 
-    ```
-2. Navigate to the project directory:
-    ```sh
-    cd rbc
-    ```
-3. Build:
-    ```sh
-    dotnet build
-    ```
+## Usage 
+1. Run the ReleaseBranchCreator.exe from the shortcut in the release-scripts directory and follow the instructions 
 
 ## Notes
 
-1. This app assumes that it will be run 2 directories down from where the repos are located. 
-Typically this should be in the payments-dev-compose/release-scripts directory
+1. This app uses the configs.json file to locate all of the repos to cut branches for. 
+2. The configs.json file is copied into the build directory when running the build.ps1 script
+3. If you need to manually create a release branch for a repo, edit the configs.json file in the build directory and then run the app
+
